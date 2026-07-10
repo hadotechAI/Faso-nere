@@ -1,0 +1,2 @@
+C:/pickabox/build/CMakeFiles/ALL_BUILD.dir
+C:/pickabox/build/CMakeFiles/ZERO_CHECK.dir
