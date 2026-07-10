@@ -574,7 +574,7 @@ class _ProfileTabState extends State<_ProfileTab> {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const ProfileEditScreen()));
         }),
         _ActionItem(icon: Icons.support_agent_rounded, label: 'Support client', onTap: () {
-          _showInfo(context, 'Support Client', 'Pour toute assistance, veuillez nous contacter par WhatsApp au +226 70 00 00 00 ou par email à support@fasonere.bf');
+          _showInfo(context, 'Support Client', 'Pour toute assistance, veuillez nous contacter par téléphone ou WhatsApp au +226 46 82 34 34 ou par email à contact@fasonere.com');
         }),
         _ActionItem(icon: Icons.info_outline_rounded, label: 'À propos de l\'application', onTap: () {
           _showInfo(context, 'À propos', 'Faso Nere est une application innovante permettant de gagner des parcelles et divers lots. Version 1.0.0');
