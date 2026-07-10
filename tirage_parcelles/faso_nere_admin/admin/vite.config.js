@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://faso-nere-backend.onrender.com',
+        target: 'https://-faso-nere-backend-kxzb.onrender.com',
         changeOrigin: true,
       }
     }

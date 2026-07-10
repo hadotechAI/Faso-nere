@@ -30,7 +30,7 @@ class AppConfig {
   );
 
   static const String productionApiUrl =
-      'https://faso-nere-backend.onrender.com';
+      'https://-faso-nere-backend-kxzb.onrender.com';
 
   static bool get isProduction => env == 'production';
   static bool get isDevelopment => env == 'development';
