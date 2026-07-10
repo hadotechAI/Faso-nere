@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/api_url_resolver.dart';
 
-const Duration _kRequestTimeout = Duration(seconds: 10);
+const Duration _kRequestTimeout = Duration(seconds: 60);
 
 class ApiException implements Exception {
   final int statusCode;

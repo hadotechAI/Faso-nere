@@ -25,8 +25,8 @@ class ApiUrlResolver {
 
     // En production → URL Render directement, sans détection
     if (AppConfig.isProduction) {
-      if (kDebugMode) print('🚀 Production : ${AppConfig.productionApiUrl}/api');
-      return '${AppConfig.productionApiUrl}/api';
+      if (kDebugMode) print('🚀 Production : ${AppConfig.productionApiUrl}');
+      return AppConfig.productionApiUrl;
     }
 
     if (!forceRefresh) {

@@ -20,6 +20,7 @@ class AppConfig {
 
   /// URLs testées au démarrage (la première qui répond est utilisée).
   static List<String> get devApiCandidates => [
+        productionApiUrl,
         'http://10.0.2.2:$apiPort/api',
         'http://$devLanIp:$apiPort/api',
       ];
@@ -30,7 +31,7 @@ class AppConfig {
   );
 
   static const String productionApiUrl =
-      'https://-faso-nere-backend-kxzb.onrender.com';
+      'https://faso-nere-backend-kxzb.onrender.com/api';
 
   static bool get isProduction => env == 'production';
   static bool get isDevelopment => env == 'development';
