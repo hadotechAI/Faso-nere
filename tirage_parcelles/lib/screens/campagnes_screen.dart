@@ -141,21 +141,22 @@ class _CampagneCardState extends State<_CampagneCard> {
           Navigator.pop(context);
           _souscrireWallet();
         },
-        onSouscrirePawaPay: (methode, phone) {
+        onSouscrirePawaPay: (methode, phone, otp) {
           Navigator.pop(context);
-          _initierPawaPay(methode, phone);
+          _initierPawaPay(methode, phone, otp);
         },
       ),
     );
   }
 
-  Future<void> _initierPawaPay(String methode, String phone) async {
+  Future<void> _initierPawaPay(String methode, String phone, String? otp) async {
     setState(() => _subscribing = true);
     try {
       final res = await transactionService.initierSouscriptionPawaPay(
         campagneId: c['id'].toString(),
         methode: methode,
         telephonePaiement: phone,
+        preAuthCode: otp,
       );
       if (!mounted) return;
       
@@ -661,7 +662,7 @@ String _fmtMontant(dynamic v) {
 class _SouscriptionSheet extends StatefulWidget {
   final Map<String, dynamic> campagne;
   final VoidCallback onSouscrireWallet;
-  final void Function(String methode, String phone) onSouscrirePawaPay;
+  final void Function(String methode, String phone, String? otp) onSouscrirePawaPay;
 
   const _SouscriptionSheet({
     required this.campagne,
@@ -677,6 +678,7 @@ class _SouscriptionSheetState extends State<_SouscriptionSheet> {
   bool _usePawaPay = false;
   String _methode = 'moov_money';
   final _phoneCtrl = TextEditingController();
+  final _otpCtrl = TextEditingController();
 
   final _methodes = {
     'moov_money': 'Moov Money BF',
@@ -696,6 +698,7 @@ class _SouscriptionSheetState extends State<_SouscriptionSheet> {
   @override
   void dispose() {
     _phoneCtrl.dispose();
+    _otpCtrl.dispose();
     super.dispose();
   }
 
@@ -785,6 +788,42 @@ class _SouscriptionSheetState extends State<_SouscriptionSheet> {
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.gold)),
               ),
             ),
+            if (_methode == 'orange_money') ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(children: [
+                  Icon(Icons.warning_amber_rounded, color: AppColors.gold, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(
+                    'Composez le *144*4*6*${widget.campagne['frais_souscription']}# sur votre téléphone pour générer votre code OTP de paiement, puis saisissez-le ci-dessous.',
+                    style: TextStyle(fontSize: 12, color: AppColors.gold, height: 1.4),
+                  )),
+                ]),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _otpCtrl,
+                keyboardType: TextInputType.number,
+                style: TextStyle(color: AppColors.white),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: AppColors.bg,
+                  labelText: 'Code de paiement (OTP)',
+                  hintText: 'Code généré par Orange',
+                  hintStyle: TextStyle(color: AppColors.grey),
+                  labelStyle: TextStyle(color: AppColors.grey),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
+                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.border)),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.gold)),
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             Row(
               children: [
@@ -811,7 +850,8 @@ class _SouscriptionSheetState extends State<_SouscriptionSheet> {
                     onPressed: () {
                       final phone = _phoneCtrl.text.trim();
                       if (phone.isEmpty) return;
-                      widget.onSouscrirePawaPay(_methode, phone);
+                      final otp = _otpCtrl.text.trim();
+                      widget.onSouscrirePawaPay(_methode, phone, otp.isEmpty ? null : otp);
                     },
                     child: const Text('Confirmer', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
