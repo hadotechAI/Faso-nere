@@ -150,6 +150,9 @@ export default function Transactions() {
     if (op === 'depot' || tx.reference?.startsWith('DEP-')) {
       return <Badge className="text-blue-400 border-blue-500/30 bg-blue-500/10">📥 Dépôt</Badge>
     }
+    if (op === 'souscription' || tx.reference?.startsWith('SOUS-')) {
+      return <Badge className="text-emerald-400 border-emerald-500/30 bg-emerald-500/10">🎟️ Souscription</Badge>
+    }
     // L'identifiant de retrait peut être un UUID, donc si ce n'est ni pack ni dépot explicitement :
     if (op === 'retrait' || tx.reference?.startsWith('RET-') || tx.reference?.length === 36) {
       return <Badge className="text-orange-400 border-orange-500/30 bg-orange-500/10">💸 Retrait</Badge>
@@ -166,6 +169,7 @@ export default function Transactions() {
       const op = tx.metadata?.operation;
       if (op === 'pack' || tx.pack_tentatives || tx.reference?.startsWith('PACK-')) tType = 'Pack'
       else if (op === 'depot' || tx.reference?.startsWith('DEP-')) tType = 'Dépôt'
+      else if (op === 'souscription' || tx.reference?.startsWith('SOUS-')) tType = 'Souscription'
       else if (op === 'retrait' || tx.reference?.startsWith('RET-') || tx.reference?.length === 36) tType = 'Retrait'
 
       return [

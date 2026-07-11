@@ -24,10 +24,10 @@ class NotificationService {
   int get unreadCount => _notifications.where((n) => !n.isRead).length;
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
 
-  /// Démarre le polling automatique (toutes les 30s)
+  /// Démarre le polling automatique (toutes les 2 minutes)
   void startPolling() {
     _pollingTimer?.cancel();
-    _pollingTimer = Timer.periodic(const Duration(seconds: 30), (_) => _pollForNew());
+    _pollingTimer = Timer.periodic(const Duration(minutes: 2), (_) => _pollForNew());
   }
 
   /// Arrête le polling
