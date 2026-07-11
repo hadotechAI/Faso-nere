@@ -181,7 +181,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         text: "Conditions d'utilisation",
                         style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
                         recognizer: TapGestureRecognizer()..onTap = () async {
-                          final url = Uri.parse('https://faso-nere-backend.onrender.com/static/politique.html');
+                          final url = Uri.parse('https://faso-nere-backend-kxzb.onrender.com/static/politique.html');
                           if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
                         },
                       ),
@@ -194,7 +194,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         text: 'Politique de confidentialité',
                         style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.w600, decoration: TextDecoration.underline),
                         recognizer: TapGestureRecognizer()..onTap = () async {
-                          final url = Uri.parse('https://faso-nere-backend.onrender.com/static/politique.html');
+                          final url = Uri.parse('https://faso-nere-backend-kxzb.onrender.com/static/politique.html');
                           if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
                         },
                       ),

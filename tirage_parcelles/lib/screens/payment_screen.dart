@@ -339,7 +339,14 @@ class _ConfirmPaymentScreenState extends State<ConfirmPaymentScreen> {
 
     setState(() => _loading = true);
     try {
-      final phone = depot.isEmpty ? widget.player.telephone : depot;
+      String phone = depot.isEmpty ? widget.player.telephone : depot;
+      phone = phone.replaceAll('+', '').replaceAll(' ', '');
+      if (widget.methodName.endsWith('_ci')) {
+        if (!phone.startsWith('225')) phone = '225$phone';
+      } else {
+        if (!phone.startsWith('226')) phone = '226$phone';
+      }
+
       final preAuthCode = _otpCtrl.text.trim();
 
       final response = await transactionService.initierPackPawaPay(

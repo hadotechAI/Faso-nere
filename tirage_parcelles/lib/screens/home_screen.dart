@@ -580,7 +580,7 @@ class _ProfileTabState extends State<_ProfileTab> {
           _showInfo(context, 'À propos', 'Faso Nere est une application innovante permettant de gagner des parcelles et divers lots. Version 1.0.0');
         }),
         _ActionItem(icon: Icons.privacy_tip_outlined, label: 'Politique de confidentialité & CGU', onTap: () async {
-          final url = Uri.parse('https://faso-nere-backend.onrender.com/static/politique.html');
+          final url = Uri.parse('https://faso-nere-backend-kxzb.onrender.com/static/politique.html');
           if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
         }),
         _ThemeToggleItem(),

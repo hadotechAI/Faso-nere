@@ -848,9 +848,36 @@ class _SouscriptionSheetState extends State<_SouscriptionSheet> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () {
-                      final phone = _phoneCtrl.text.trim();
+                      String phone = _phoneCtrl.text.trim();
                       if (phone.isEmpty) return;
+
                       final otp = _otpCtrl.text.trim();
+                      
+                      // Validation de l'OTP pour Orange Money BF
+                      if (_methode == 'orange_money' && otp.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Text('Veuillez entrer le code de paiement (OTP)'),
+                          backgroundColor: AppColors.error,
+                        ));
+                        return;
+                      }
+
+                      // Nettoyage du numéro
+                      phone = phone.replaceAll('+', '').replaceAll(' ', '');
+
+                      // Ajout de l'indicatif automatique
+                      if (_methode.endsWith('_ci')) {
+                        // Côte d'Ivoire (225)
+                        if (!phone.startsWith('225')) {
+                          phone = '225$phone';
+                        }
+                      } else {
+                        // Burkina Faso (226)
+                        if (!phone.startsWith('226')) {
+                          phone = '226$phone';
+                        }
+                      }
+
                       widget.onSouscrirePawaPay(_methode, phone, otp.isEmpty ? null : otp);
                     },
                     child: const Text('Confirmer', style: TextStyle(fontWeight: FontWeight.bold)),

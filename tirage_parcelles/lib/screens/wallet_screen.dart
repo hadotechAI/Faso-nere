@@ -183,10 +183,18 @@ class _DepotScreenState extends State<DepotScreen> {
     setState(() => _loading = true);
     try {
       final preAuthCode = _otpCtrl.text.trim();
+      
+      String phone = _phoneCtrl.text.trim().replaceAll('+', '').replaceAll(' ', '');
+      if (method.endsWith('_ci')) {
+        if (!phone.startsWith('225')) phone = '225$phone';
+      } else {
+        if (!phone.startsWith('226')) phone = '226$phone';
+      }
+
       final response = await transactionService.initierDepotPawaPay(
         montant: _montant,
         methode: method,
-        telephonePaiement: _phoneCtrl.text.trim(),
+        telephonePaiement: phone,
         preAuthCode: preAuthCode.isNotEmpty ? preAuthCode : null,
       );
       if (!mounted) return;
@@ -666,10 +674,19 @@ class _RetraitScreenState extends State<RetraitScreen> {
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _loading = true);
     try {
+      String phone = _numeroCtrl.text.trim().replaceAll('+', '').replaceAll(' ', '');
+      String methodeName = _methods[_methodIndex].name;
+      
+      if (methodeName.endsWith('_ci')) {
+        if (!phone.startsWith('225')) phone = '225$phone';
+      } else {
+        if (!phone.startsWith('226')) phone = '226$phone';
+      }
+
       final response = await transactionService.initierRetrait(
         montant:         _montant,
-        methode:         _methods[_methodIndex].name,
-        numeroReception: _numeroCtrl.text.trim(),
+        methode:         methodeName,
+        numeroReception: phone,
       );
       if (!mounted) return;
       final otpCode = response['otp_code'] as String?;
