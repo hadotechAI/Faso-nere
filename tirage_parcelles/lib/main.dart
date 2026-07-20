@@ -116,6 +116,14 @@ class FasoNereApp extends StatelessWidget {
             upgrader: Upgrader(
               languageCode: 'fr',
               messages: UpgraderMessages(code: 'fr'),
+              storeController: UpgraderStoreController(
+                onAndroid: () => UpgraderAppcastStore(
+                  appcastURL: 'https://faso-nere-backend-kxzb.onrender.com/api/appcast.xml',
+                ),
+                oniOS: () => UpgraderAppcastStore(
+                  appcastURL: 'https://faso-nere-backend-kxzb.onrender.com/api/appcast.xml',
+                ),
+              ),
             ),
             child: const LandingScreen(),
           ),

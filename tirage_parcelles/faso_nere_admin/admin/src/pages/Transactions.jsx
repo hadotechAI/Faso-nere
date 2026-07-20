@@ -143,7 +143,11 @@ export default function Transactions() {
   }
 
   const getTxTypeBadge = (tx) => {
-    const op = tx.metadata?.operation;
+    let meta = tx.metadata;
+    if (typeof meta === 'string') {
+      try { meta = JSON.parse(meta); } catch (e) { meta = {}; }
+    }
+    const op = meta?.operation;
     if (op === 'pack' || tx.pack_tentatives || tx.reference?.startsWith('PACK-')) {
       return <Badge className="text-purple-400 border-purple-500/30 bg-purple-500/10">📦 Pack</Badge>
     }
@@ -166,7 +170,11 @@ export default function Transactions() {
                      'Statut', 'Référence', 'Note Admin', 'Tentatives']
     const rows = txs.map(tx => {
       let tType = 'Autre'
-      const op = tx.metadata?.operation;
+      let meta = tx.metadata;
+      if (typeof meta === 'string') {
+        try { meta = JSON.parse(meta); } catch (e) { meta = {}; }
+      }
+      const op = meta?.operation;
       if (op === 'pack' || tx.pack_tentatives || tx.reference?.startsWith('PACK-')) tType = 'Pack'
       else if (op === 'depot' || tx.reference?.startsWith('DEP-')) tType = 'Dépôt'
       else if (op === 'souscription' || tx.reference?.startsWith('SOUS-')) tType = 'Souscription'

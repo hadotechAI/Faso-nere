@@ -48,9 +48,37 @@ class _WheelScreenState extends State<WheelScreen>
     super.initState();
     _tentatives = widget.player.tentatives;
 
-    // Les segments sont juste visuels — on les mélange pour l'esthétique
-    // mais le VRAI cadeau vient du serveur
-    _segments = List<GiftModel>.from(widget.dimension.gifts)..shuffle();
+    _segments = List<GiftModel>.from(widget.dimension.gifts);
+    
+    // Si la roue ne contient aucun cadeau "perdant" (Aucun gain), on en ajoute artificiellement
+    // sinon la roue ne saura pas où s'arrêter quand le joueur perd !
+    final hasLoser = _segments.any((g) => 
+        g.isLoser || g.name.toLowerCase().contains('aucun') || g.name.toLowerCase().contains('perdu') || g.category == GiftCategory.aucun);
+        
+    if (!hasLoser && _segments.isNotEmpty) {
+      _segments.add(const GiftModel(
+        id: 'fake-loser-1',
+        name: 'Aucun gain',
+        description: 'Dommage, réessayez !',
+        prixReel: 0,
+        isWinner: false,
+        isLoser: true,
+        icon: '😔',
+        category: GiftCategory.aucun,
+      ));
+      _segments.add(const GiftModel(
+        id: 'fake-loser-2',
+        name: 'Pas de chance',
+        description: 'Dommage, réessayez !',
+        prixReel: 0,
+        isWinner: false,
+        isLoser: true,
+        icon: '🥺',
+        category: GiftCategory.aucun,
+      ));
+    }
+    
+    _segments.shuffle();
 
     _spinCtrl = AnimationController(
       vsync: this,
@@ -113,35 +141,54 @@ class _WheelScreenState extends State<WheelScreen>
     final tours     = 7 + rng.nextInt(5);
     final arc       = 2 * pi / _segments.length;
     final resultId  = tirageResult.cadeau.id;
+    // Si on n'a pas trouvé la case exacte, on essaie par le nom
     int selectedIndex = _segments.indexWhere((g) => g.id == resultId);
     if (selectedIndex < 0) {
       selectedIndex = _segments.indexWhere((g) => g.name == tirageResult.cadeau.name);
     }
     
-    // Si on n'a pas trouvé la case exacte, on applique l'option 2 (choisir une case "aucun gain" au hasard)
-    if (selectedIndex < 0) {
-      if (!tirageResult.isWinner) {
-        // C'est un tirage perdant : on cherche toutes les cases perdantes
-        final losers = [];
-        for (int i = 0; i < _segments.length; i++) {
-          if (_segments[i].isLoser || !_segments[i].isWinner) {
-            losers.add(i);
-          }
-        }
-        // S'il y a des cases perdantes, on en choisit une au hasard
-        if (losers.isNotEmpty) {
-          selectedIndex = losers[rng.nextInt(losers.length)];
-        }
-      } else {
-        // C'est un tirage gagnant : on cherche toutes les cases gagnantes
-        final winners = [];
-        for (int i = 0; i < _segments.length; i++) {
-          if (_segments[i].isWinner) winners.add(i);
-        }
-        if (winners.isNotEmpty) {
-          selectedIndex = winners[rng.nextInt(winners.length)];
+    // RÈGLE STRICTE : Si le joueur a PERDU, la roue DOIT s'arrêter sur une case "Aucun gain".
+    // Même si le serveur a renvoyé un cadeau configuré comme "perdant" (ex: "Parcelle" is_winner=false), 
+    // on ne doit pas s'arrêter dessus visuellement pour ne pas induire le joueur en erreur.
+    if (!tirageResult.isWinner) {
+      final explicitLosers = <int>[];
+      for (int i = 0; i < _segments.length; i++) {
+        final g = _segments[i];
+        if (g.isLoser || 
+            g.name.toLowerCase().contains('aucun') || 
+            g.name.toLowerCase().contains('perdu') || 
+            g.category.name == 'aucun') {
+          explicitLosers.add(i);
         }
       }
+      
+      // On force la sélection sur un vrai perdant visuel
+      if (explicitLosers.isNotEmpty) {
+        selectedIndex = explicitLosers[rng.nextInt(explicitLosers.length)];
+      } else {
+        // En secours, on prend n'importe quelle case qui n'est pas "winner"
+        final implicitLosers = <int>[];
+        for (int i = 0; i < _segments.length; i++) {
+          if (!_segments[i].isWinner) implicitLosers.add(i);
+        }
+        if (implicitLosers.isNotEmpty) {
+          selectedIndex = implicitLosers[rng.nextInt(implicitLosers.length)];
+        }
+      }
+    } else if (selectedIndex < 0) {
+      // C'est un tirage gagnant mais on n'a pas trouvé la case correspondante.
+      // On cherche toutes les cases gagnantes pour en choisir une au hasard
+      final winners = <int>[];
+      for (int i = 0; i < _segments.length; i++) {
+        if (_segments[i].isWinner) winners.add(i);
+      }
+      if (winners.isNotEmpty) {
+        selectedIndex = winners[rng.nextInt(winners.length)];
+      }
+    }
+
+    if (selectedIndex < 0) {
+      selectedIndex = 0; // Sécurité ultime
     }
     
     final targetIndex = selectedIndex >= 0 ? selectedIndex : rng.nextInt(_segments.length);

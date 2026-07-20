@@ -495,14 +495,6 @@ class _CampagneDetailScreenState extends State<CampagneDetailScreen> {
                     '${p['prenom']} ${p['nom']}',
                     style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600, fontSize: 14),
                   ),
-                  subtitle: Text(
-                    p['telephone'] ?? '',
-                    style: TextStyle(color: AppColors.grey, fontSize: 12),
-                  ),
-                  trailing: Text(
-                    '${_fmtMontant(p['montant_paye'])} FCFA',
-                    style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
                 );
               },
             ),

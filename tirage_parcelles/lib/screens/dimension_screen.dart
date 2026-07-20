@@ -185,14 +185,17 @@ class _DimensionScreenState extends State<DimensionScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 10),
-                      child: Row(children: [
-                        _StatBadge(icon: Icons.casino_outlined,
-                            label: dim.chanceLabel, color: AppColors.success),
-                        const Spacer(),
-                        _StatBadge(icon: Icons.emoji_events_outlined,
-                            label: 'Max ${dim.prixMaxLabel} FCFA',
-                            color: AppColors.gold),
-                      ]),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _StatBadge(icon: Icons.casino_outlined,
+                              label: dim.chanceLabel, color: AppColors.success),
+                          _StatBadge(icon: Icons.emoji_events_outlined,
+                              label: 'Max ${dim.prixMaxLabel} FCFA',
+                              color: AppColors.gold),
+                        ]),
                     ),
 
                     const Padding(
@@ -397,10 +400,17 @@ class _StatBadge extends StatelessWidget {
   const _StatBadge({required this.icon, required this.label, required this.color});
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-    Icon(icon, size: 14, color: color),
-    const SizedBox(width: 4),
-    Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
-        color: color)),
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(icon, size: 14, color: color),
+      const SizedBox(width: 4),
+      Flexible(
+        child: Text(label, 
+          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
   ]);
 }

@@ -15,6 +15,7 @@ import 'profile_edit_screen.dart';
 import '../widgets/promo_code_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'campagnes_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class HomeScreen extends StatefulWidget {
   final PlayerModel player;
@@ -576,8 +577,11 @@ class _ProfileTabState extends State<_ProfileTab> {
         _ActionItem(icon: Icons.support_agent_rounded, label: 'Support client', onTap: () {
           _showInfo(context, 'Support Client', 'Pour toute assistance, veuillez nous contacter par téléphone ou WhatsApp au +226 46 82 34 34 ou par email à contact@fasonere.com');
         }),
-        _ActionItem(icon: Icons.info_outline_rounded, label: 'À propos de l\'application', onTap: () {
-          _showInfo(context, 'À propos', 'Faso Nere est une application innovante permettant de gagner des parcelles et divers lots. Version 1.0.0');
+        _ActionItem(icon: Icons.info_outline_rounded, label: 'À propos de l\'application', onTap: () async {
+          final packageInfo = await PackageInfo.fromPlatform();
+          final version = '${packageInfo.version}+${packageInfo.buildNumber}';
+          if (!context.mounted) return;
+          _showInfo(context, 'À propos', 'Faso Nere est une application innovante permettant de gagner des parcelles et divers lots.\n\nVersion installée : $version');
         }),
         _ActionItem(icon: Icons.privacy_tip_outlined, label: 'Politique de confidentialité & CGU', onTap: () async {
           final url = Uri.parse('https://faso-nere-backend-kxzb.onrender.com/static/politique.html');
