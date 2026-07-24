@@ -212,8 +212,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 methodName: _methods[_method].name,
                 methodLabel:_methods[_method].label,
                 pinUssd:    _providerMeta[_methods[_method].name]?['pin_ussd'] as String?,
-                defaultPhone: _providerMeta[_methods[_method].name]?['sandbox_test_msisdn'] as String?
-                    ?? widget.player.telephone,
+                defaultPhone: widget.player.telephone,
               ),
             )),
           ),

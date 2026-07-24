@@ -74,7 +74,6 @@ class _DepotScreenState extends State<DepotScreen> {
       final providers = (cfg['providers'] as List?) ?? [];
       final methods = <_PayMethod>[];
       String? pin;
-      String? testPhone;
       for (final raw in providers) {
         final p = Map<String, dynamic>.from(raw as Map);
         final name = p['methode'] as String?;
@@ -82,7 +81,6 @@ class _DepotScreenState extends State<DepotScreen> {
           methods.add(_allMethods[name]!);
           if (methods.length == 1) {
             pin = p['pin_ussd'] as String?;
-            testPhone = p['sandbox_test_msisdn'] as String?;
           }
         }
       }
@@ -96,7 +94,6 @@ class _DepotScreenState extends State<DepotScreen> {
         setState(() {
           _methods = methods.isNotEmpty ? methods : [_allMethods['moov_money']!];
           _pinUssd = pin;
-          if (testPhone != null) _phoneCtrl.text = testPhone;
           _loadingConfig = false;
         });
       }
