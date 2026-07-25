@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "180648998766",
+    "project_id": "faso-nere",
+    "storage_bucket": "faso-nere.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:180648998766:android:163433fd5a2d95821a337f",
+        "android_client_info": {
+          "package_name": "com.example.tirage_parcelles"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjQhg2mZnAGTKCaFghhqxwj05oLIA2JRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

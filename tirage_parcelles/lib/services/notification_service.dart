@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'api_client.dart';
 
@@ -126,6 +127,30 @@ class NotificationService {
     await _plugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
+
+    // Écouteur pour les notifications push en premier plan (FCM)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        show(
+          titre: message.notification!.title ?? 'Faso Nere',
+          message: message.notification!.body ?? '',
+          type: message.data['type'] ?? 'systeme',
+        );
+      }
+    });
+  }
+
+  /// Synchronise le FCM Token avec le serveur
+  Future<void> syncFcmToken() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        print("FCM Token: $token");
+        await api.post('/users/fcm-token', {'token': token});
+      }
+    } catch (e) {
+      print("Erreur syncFcmToken: $e");
+    }
   }
 
   /// Demande les permissions de notification (Android + iOS)

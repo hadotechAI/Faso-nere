@@ -9,9 +9,24 @@ import 'services/notification_service.dart';
 import 'core/app_state.dart';
 import 'core/app_colors.dart';
 import 'package:upgrader/upgrader.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp();
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    print("Erreur initialisation Firebase: $e");
+  }
 
   // Détection auto : émulateur (10.0.2.2) ou téléphone (IP du PC sur le Wi‑Fi)
   await api.loadSettings();

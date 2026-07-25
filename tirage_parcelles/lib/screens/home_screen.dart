@@ -32,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Démarrer le polling des notifications en arrière-plan
     notificationService.startPolling();
+    // Envoyer le token Firebase au backend
+    notificationService.syncFcmToken();
   }
 
   @override
