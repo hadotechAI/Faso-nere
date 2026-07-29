@@ -32,6 +32,7 @@ export default function Campagnes() {
   const [loading,    setLoading]    = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [editOpen,   setEditOpen]   = useState(false)
   const [selected,   setSelected]   = useState(null)
 
   const load = useCallback(async () => {
@@ -110,12 +111,21 @@ export default function Campagnes() {
 
       {/* Modals */}
       <CreateModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load} />
-      {selected && (
+      {selected && !editOpen && (
         <DetailModal
           open={detailOpen}
           campagne={selected}
           onClose={() => { setDetailOpen(false); setSelected(null) }}
           onRefresh={load}
+          onEdit={() => { setDetailOpen(false); setEditOpen(true) }}
+        />
+      )}
+      {selected && editOpen && (
+        <EditModal
+          open={editOpen}
+          campagne={selected}
+          onClose={() => { setEditOpen(false); setDetailOpen(true) }}
+          onUpdated={load}
         />
       )}
     </div>
@@ -336,7 +346,7 @@ function CreateModal({ open, onClose, onCreated }) {
 }
 
 // ── Modal détail + participants + tirage ─────────────────────
-function DetailModal({ open, campagne: c, onClose, onRefresh }) {
+function DetailModal({ open, campagne: c, onClose, onRefresh, onEdit }) {
   const [participants, setParticipants] = useState([])
   const [loading,      setLoading]      = useState(true)
   const [tirage,       setTirage]       = useState(false)
@@ -491,8 +501,16 @@ function DetailModal({ open, campagne: c, onClose, onRefresh }) {
           )}
         </div>
 
-        {/* Tirage action & Delete */}
+        {/* Tirage action & Delete & Edit */}
         <div className="pt-4 flex gap-3 border-t border-border/50">
+          <Button
+            variant="secondary"
+            onClick={onEdit}
+            className="flex-1 py-3 border-gray-600 hover:bg-gray-700"
+          >
+            <span className="font-bold">Modifier la campagne</span>
+          </Button>
+
           <Button
             variant="danger"
             onClick={handleDelete}
@@ -522,3 +540,103 @@ function DetailModal({ open, campagne: c, onClose, onRefresh }) {
     </Modal>
   )
 }
+
+// ── Modal édition ───────────────────────────────────────────
+function EditModal({ open, campagne, onClose, onUpdated }) {
+  const [form, setForm] = useState({
+    titre: campagne.titre || '', 
+    description: campagne.description || '', 
+    type_terrain: campagne.type_terrain || 'habitation',
+    frais_souscription: campagne.frais_souscription || 10000,
+    // input datetime-local requires format YYYY-MM-DDTHH:MM
+    date_debut: campagne.date_debut ? new Date(campagne.date_debut).toISOString().slice(0, 16) : '', 
+    date_fin: campagne.date_fin ? new Date(campagne.date_fin).toISOString().slice(0, 16) : ''
+  })
+  const [updating, setUpdating] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setUpdating(true)
+    try {
+      const fd = new FormData()
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v))
+      await api.put(`/admin/campagnes/${campagne.id}`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      toast.success('Campagne modifiée avec succès !')
+      onUpdated()
+      onClose()
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Erreur lors de la modification')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  return (
+    <Modal open={open} onClose={onClose} title="Modifier la Campagne">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input label="Titre de la campagne" required value={form.titre}
+          onChange={e => setForm({...form, titre: e.target.value})} />
+        <Input label="Description (optionnel)" value={form.description}
+          onChange={e => setForm({...form, description: e.target.value})} />
+
+        <div>
+          <label className="text-sm font-semibold text-gray-300 block mb-2">Type de terrain</label>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { value: 'habitation', label: '🏡 Habitation' },
+              { value: 'commercial', label: '🏢 Commercial' },
+            ].map(opt => (
+              <button
+                key={opt.value} type="button"
+                onClick={() => setForm({...form, type_terrain: opt.value})}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  form.type_terrain === opt.value
+                    ? 'border-gold bg-gold/10 text-gold'
+                    : 'border-border text-gray-400 hover:border-gray-500'
+                }`}
+              >
+                <p className="font-semibold text-sm">{opt.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Input 
+          type="number" 
+          label="Frais de souscription (FCFA)" 
+          required 
+          value={form.frais_souscription}
+          onChange={e => setForm({...form, frais_souscription: e.target.value})} 
+        />
+
+        {/* Dates */}
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { key: 'date_debut', label: 'Date de début' },
+            { key: 'date_fin',   label: 'Date de fin'   },
+          ].map(({ key, label }) => (
+            <div key={key} className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-gray-300">{label}</label>
+              <input
+                type="datetime-local" required
+                className="bg-bg border border-border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-gold transition-colors"
+                value={form[key]}
+                onChange={e => setForm({...form, [key]: e.target.value})}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="pt-2 flex justify-end gap-3">
+          <Button variant="secondary" type="button" onClick={onClose}>Annuler</Button>
+          <Button type="submit" disabled={updating}>
+            {updating ? 'Enregistrement...' : 'Enregistrer les modifications'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
