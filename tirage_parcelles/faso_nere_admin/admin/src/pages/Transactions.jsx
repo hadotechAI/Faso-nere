@@ -366,7 +366,10 @@ export default function Transactions() {
                     {tx.reference ?? '—'}
                   </td>
 
-                  <td className="px-4 py-3 text-xs text-gray-400 italic max-w-xs truncate">
+                  <td 
+                    className="px-4 py-3 text-xs text-gray-400 italic max-w-xs whitespace-normal break-words"
+                    title={tx.note_admin}
+                  >
                     {tx.note_admin ?? '—'}
                   </td>
 
