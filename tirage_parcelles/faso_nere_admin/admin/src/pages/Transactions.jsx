@@ -35,6 +35,7 @@ const TYPES = [
   { value: 'depot',   label: '📥 Dépôts'        },
   { value: 'retrait', label: '💸 Retraits'      },
   { value: 'pack',    label: '📦 Achats Pack'   },
+  { value: 'souscription', label: '🎟️ Souscriptions' },
 ]
 
 // Custom Tooltip pour Recharts
@@ -90,6 +91,7 @@ export default function Transactions() {
       let currentType = type;
       if (activeTab === 'depot') currentType = 'depot';
       if (activeTab === 'retrait') currentType = 'retrait';
+      if (activeTab === 'souscription') currentType = 'souscription';
 
       const params = new URLSearchParams({
         page, limit: 20,
@@ -288,12 +290,13 @@ export default function Transactions() {
         </div>
       )}
 
-      {/* Onglets Dépôts / Retraits */}
-      <div className="flex gap-2 border-b border-border/50 pb-2">
+      {/* Onglets Dépôts / Retraits / Souscriptions */}
+      <div className="flex gap-2 border-b border-border/50 pb-2 overflow-x-auto no-scrollbar">
         {[
           { id: 'all', label: 'Toutes les transactions' },
           { id: 'depot', label: '📥 Dépôts & Packs' },
-          { id: 'retrait', label: '💸 Retraits Uniquement' }
+          { id: 'retrait', label: '💸 Retraits Uniquement' },
+          { id: 'souscription', label: '🎟️ Souscriptions' }
         ].map(tab => (
           <button
             key={tab.id}
