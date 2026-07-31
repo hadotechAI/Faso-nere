@@ -377,7 +377,7 @@ export default function Transactions() {
                   </td>
 
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {tx.statut === 'pending' && (tx.reference?.startsWith('RET-') || tx.reference?.length === 36) ? (
+                    {tx.statut === 'pending' && tx.type === 'retrait' && (tx.reference?.startsWith('RET-') || tx.reference?.length === 36) ? (
                       <div className="flex gap-2">
                         <Button
                           variant="primary"
