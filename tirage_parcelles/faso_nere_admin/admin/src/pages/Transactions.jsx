@@ -1,8 +1,11 @@
 /* eslint-disable react/prop-types, react/no-unescaped-entities */
 // src/pages/Transactions.jsx
 import { useEffect, useState, useCallback } from 'react'
-import { Download, Check, X as XIcon, TrendingUp, TrendingDown } from 'lucide-react'
+import { Download, Check, X as XIcon, TrendingUp, TrendingDown, FileText, FileSpreadsheet } from 'lucide-react'
 import toast from 'react-hot-toast'
+import * as XLSX from 'xlsx'
+import { jsPDF } from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, BarChart, Bar } from 'recharts'
 import api from '../api/client'
 import { fmt, fmtDateTime, txColor, methodLabel } from '../utils/format'
@@ -71,6 +74,12 @@ export default function Transactions() {
   const [actionType, setActionType] = useState('') // 'approve' | 'reject'
   const [noteAdmin,  setNoteAdmin]  = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+
+  // Export Modal
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+  const [exportType, setExportType] = useState('')
+  const [exportStatut, setExportStatut] = useState('')
+  const [exportMethode, setExportMethode] = useState('')
 
   const loadStats = useCallback(async () => {
     setStatsLoading(true)
@@ -166,43 +175,103 @@ export default function Transactions() {
     return <Badge className="text-gray-400 border-gray-500/30 bg-gray-500/5">Autre</Badge>
   }
 
-  // Export CSV
-  const exportCSV = () => {
-    const headers = ['Date', 'Joueur', 'Téléphone', 'Type', 'Montant', 'Méthode',
-                     'Statut', 'Référence', 'Note Admin', 'Tentatives']
-    const rows = txs.map(tx => {
-      let tType = 'Autre'
-      let meta = tx.metadata;
-      if (typeof meta === 'string') {
-        try { meta = JSON.parse(meta); } catch (e) { meta = {}; }
-      }
-      const op = meta?.operation;
-      if (op === 'pack' || tx.pack_tentatives || tx.reference?.startsWith('PACK-')) tType = 'Pack'
-      else if (op === 'depot' || tx.reference?.startsWith('DEP-')) tType = 'Dépôt'
-      else if (op === 'souscription' || tx.reference?.startsWith('SOUS-')) tType = 'Souscription'
-      else if (op === 'retrait' || tx.reference?.startsWith('RET-') || tx.reference?.length === 36) tType = 'Retrait'
+  // Fetch all filtered data for export (robust approach with pagination loop)
+  const fetchAllDataForExport = async () => {
+    toast.loading("Génération du fichier en cours... (Récupération des données)", { id: "export-toast" });
+    try {
+      let allTransactions = [];
+      let currentPage = 1;
+      let totalPages = 1;
 
-      return [
-        fmtDateTime(tx.created_at),
-        `${tx.nom} ${tx.prenom}`,
-        tx.user_telephone,
-        tType,
-        tx.montant,
-        methodLabel(tx.methode),
-        tx.statut,
-        tx.reference ?? '',
-        tx.note_admin ?? '',
-        tx.tentatives_ajout,
-      ]
-    })
-    const csv = [headers, ...rows]
-      .map(r => r.map(v => `"${v}"`).join(','))
-      .join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href = url; a.download = 'transactions.csv'; a.click()
-    URL.revokeObjectURL(url)
+      do {
+        const params = new URLSearchParams({
+          page: currentPage, limit: 100,
+          ...(exportStatut  && { statut: exportStatut }),
+          ...(exportMethode && { methode: exportMethode }),
+          ...(exportType && { type: exportType }),
+        });
+        const { data } = await api.get(`/admin/transactions?${params}`);
+        allTransactions = allTransactions.concat(data.transactions);
+        totalPages = data.pagination.pages;
+        currentPage++;
+      } while (currentPage <= totalPages);
+      
+      const rows = allTransactions.map(tx => {
+        let tType = 'Autre'
+        let meta = tx.metadata;
+        if (typeof meta === 'string') {
+          try { meta = JSON.parse(meta); } catch (e) { meta = {}; }
+        }
+        const op = meta?.operation;
+        if (op === 'pack' || tx.pack_tentatives || tx.reference?.startsWith('PACK-')) tType = 'Pack'
+        else if (op === 'depot' || tx.reference?.startsWith('DEP-')) tType = 'Dépôt'
+        else if (op === 'souscription' || tx.reference?.startsWith('SOUS-')) tType = 'Souscription'
+        else if (op === 'retrait' || tx.reference?.startsWith('RET-') || tx.reference?.length === 36) tType = 'Retrait'
+
+        return [
+          fmtDateTime(tx.created_at),
+          `${tx.nom} ${tx.prenom}`,
+          tx.user_telephone,
+          tType,
+          tx.montant,
+          methodLabel(tx.methode),
+          tx.statut,
+          tx.reference ?? '',
+          tx.note_admin ?? '',
+        ]
+      });
+
+      toast.dismiss("export-toast");
+      return rows;
+    } catch (err) {
+      toast.dismiss("export-toast");
+      toast.error("Erreur lors de l'exportation des données");
+      return null;
+    }
+  }
+
+  // Export Excel
+  const exportExcel = async () => {
+    try {
+      const rows = await fetchAllDataForExport();
+      if (!rows) return;
+
+      const headers = ['Date', 'Joueur', 'Téléphone', 'Type', 'Montant', 'Méthode', 'Statut', 'Référence', 'Note Admin'];
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Transactions");
+      XLSX.writeFile(workbook, "Transactions.xlsx");
+      toast.success("Excel généré avec succès !");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la création du fichier Excel.");
+    }
+  }
+
+  // Export PDF
+  const exportPDF = async () => {
+    try {
+      const rows = await fetchAllDataForExport();
+      if (!rows) return;
+
+      const headers = [['Date', 'Joueur', 'Téléphone', 'Type', 'Montant', 'Méthode', 'Statut']];
+      const pdfRows = rows.map(r => r.slice(0, 7));
+
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.text("Liste des Transactions", 14, 15);
+      autoTable(doc, {
+        head: headers,
+        body: pdfRows,
+        startY: 20,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [41, 128, 185] }
+      });
+      doc.save("Transactions.pdf");
+      toast.success("PDF généré avec succès !");
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors de la création du fichier PDF.");
+    }
   }
 
   return (
@@ -211,8 +280,8 @@ export default function Transactions() {
         title="Transactions & Retraits"
         subtitle={`${fmt(pagination.total)} transactions enregistrées`}
         actions={
-          <Button variant="secondary" onClick={exportCSV}>
-            <Download size={14} /> Exporter CSV
+          <Button variant="secondary" onClick={() => setIsExportModalOpen(true)} className="!px-3 flex items-center gap-2">
+            <Download size={16} /> <span className="hidden sm:inline">Exporter les transactions</span>
           </Button>
         }
       />
@@ -470,6 +539,48 @@ export default function Transactions() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Modal d'export */}
+      <Modal
+        open={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        title="Configurer l'export"
+        footer={
+          <div className="flex gap-3 justify-end w-full">
+            <Button variant="secondary" onClick={() => setIsExportModalOpen(false)}>Annuler</Button>
+            <Button variant="primary" onClick={() => { exportExcel(); setIsExportModalOpen(false); }} className="flex items-center gap-2">
+              <FileSpreadsheet size={16} /> Générer Excel
+            </Button>
+            <Button variant="danger" onClick={() => { exportPDF(); setIsExportModalOpen(false); }} className="flex items-center gap-2">
+              <FileText size={16} /> Générer PDF
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-400">Choisissez les critères des transactions que vous souhaitez exporter :</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Type de transaction"
+              options={TYPES}
+              value={exportType}
+              onChange={e => setExportType(e.target.value)}
+            />
+            <Select
+              label="Statut"
+              options={STATUTS}
+              value={exportStatut}
+              onChange={e => setExportStatut(e.target.value)}
+            />
+            <Select
+              label="Méthode de paiement"
+              options={METHODES}
+              value={exportMethode}
+              onChange={e => setExportMethode(e.target.value)}
+            />
+          </div>
+        </div>
       </Modal>
     </div>
   )

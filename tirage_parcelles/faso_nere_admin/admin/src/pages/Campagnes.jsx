@@ -358,7 +358,7 @@ function DetailModal({ open, campagne: c, onClose, onRefresh, onEdit }) {
   const loadParticipants = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await api.get(`/admin/campagnes/${c.id}/participants`)
+      const { data } = await api.get(`/admin/campagnes/${c.id}/participants?limit=10000`)
       setParticipants(data.participants || [])
     } catch {
       toast.error('Erreur chargement des participants')

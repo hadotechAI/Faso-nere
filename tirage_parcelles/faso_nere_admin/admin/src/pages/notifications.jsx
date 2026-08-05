@@ -31,24 +31,16 @@ export default function Notifications() {
     }
     setGlobalLoading(true)
     try {
-      // Récupérer tous les joueurs et notifier chacun
-      const { data } = await api.get('/admin/joueurs?limit=100&page=1')
-      const joueurs   = data.joueurs ?? []
-      let count = 0
+      // Appel de la nouvelle route globale (une seule requête)
+      await api.post('/admin/notifications/global', {
+        titre:   globalForm.titre,
+        message: globalForm.message,
+        type:    globalForm.type,
+        send_sms: globalForm.send_sms,
+      })
 
-      await Promise.allSettled(
-        joueurs.map(j =>
-          api.post(`/admin/joueurs/${j.id}/notifier`, {
-            titre:   globalForm.titre,
-            message: globalForm.message,
-            type:    globalForm.type,
-            send_sms: globalForm.send_sms,
-          }).then(() => count++)
-        )
-      )
-
-      setGlobalSent(count)
-      toast.success(`Notification envoyée à ${count} joueur(s)`)
+      setGlobalSent(true) // On peut juste afficher un succès global (on ne compte plus côté frontend)
+      toast.success(`Notification globale lancée avec succès`)
       setGlobalForm({ titre: '', message: '', type: 'systeme', send_sms: false })
     } catch { toast.error('Erreur envoi notifications') }
     finally { setGlobalLoading(false) }

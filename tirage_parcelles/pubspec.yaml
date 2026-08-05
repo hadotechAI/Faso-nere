@@ -2,7 +2,7 @@ name: faso_nere
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.0.8+9
+version: 1.1.2+12
 
 environment:
   sdk: ^3.11.0

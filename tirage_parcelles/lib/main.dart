@@ -129,6 +129,8 @@ class FasoNereApp extends StatelessWidget {
             showLater: false,
             barrierDismissible: false, // Empêche de fermer la pop-up en cliquant à côté
             upgrader: Upgrader(
+              durationUntilAlertAgain: Duration.zero,
+              debugLogging: kDebugMode,
               languageCode: 'fr',
               messages: UpgraderMessages(code: 'fr'),
               storeController: UpgraderStoreController(

@@ -373,7 +373,7 @@ class _CampagneCardState extends State<_CampagneCard> {
   );
 }
 
-// ── Ecran détail avec participants ───────────────────────────
+// ── Ecran détail avec top 15 + position du joueur ────────────
 class CampagneDetailScreen extends StatefulWidget {
   final String campagneId;
   const CampagneDetailScreen({super.key, required this.campagneId});
@@ -423,6 +423,9 @@ class _CampagneDetailScreenState extends State<CampagneDetailScreen> {
     final d = _detail!;
     final participants = List<Map<String, dynamic>>.from(d['participants'] ?? []);
     final baseUrl = campagnesService.mediaBaseUrl;
+    final total = d['nb_participants'] ?? 0;
+    final monRang = d['mon_rang'] as Map<String, dynamic>?;
+    final monRangNum = monRang?['rang'] as int?;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -460,9 +463,9 @@ class _CampagneDetailScreenState extends State<CampagneDetailScreen> {
           if (d['tirage_effectue'] == true && d['gagnant_nom'] != null)
             _GagnantBanner(nom: d['gagnant_nom'], prenom: d['gagnant_prenom']),
 
-          // Participants
+          // ── Section participants ───────────────────────────
           const SizedBox(height: 20),
-          Text('Participants (${d['nb_participants'] ?? 0})',
+          Text('Participants ($total)',
             style: TextStyle(color: AppColors.white, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
 
@@ -475,34 +478,100 @@ class _CampagneDetailScreenState extends State<CampagneDetailScreen> {
               ),
             )
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: participants.length,
-              separatorBuilder: (_, __) => Divider(color: AppColors.border, height: 1),
-              itemBuilder: (_, i) {
-                final p = participants[i];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.gold.withOpacity(0.2),
-                    child: Text(
-                      '${i + 1}',
-                      style: TextStyle(color: AppColors.gold, fontWeight: FontWeight.bold, fontSize: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                children: [
+                  // Les 15 premiers
+                  ...participants.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final p = entry.value;
+                    return Column(
+                      children: [
+                        ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          leading: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AppColors.surface2,
+                            child: Text(
+                              '${i + 1}',
+                              style: TextStyle(
+                                color: AppColors.grey,
+                                fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                          title: Text(
+                            '${p['prenom']} ${p['nom']}',
+                            style: TextStyle(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14),
+                          ),
+                        ),
+                        if (i < participants.length - 1)
+                          Divider(color: AppColors.border, height: 1, indent: 16, endIndent: 16),
+                      ],
+                    );
+                  }),
+
+                  // ── Points de suspension si plus de 15 participants ──
+                  if (total > participants.length) ...[
+                    Divider(color: AppColors.border, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Column(
+                        children: [
+                          Text('·', style: TextStyle(color: AppColors.grey, fontSize: 20, height: 0.6)),
+                          Text('·', style: TextStyle(color: AppColors.grey, fontSize: 20, height: 0.6)),
+                          Text('·', style: TextStyle(color: AppColors.grey, fontSize: 20, height: 0.6)),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${total - participants.length} autre${(total - participants.length) > 1 ? 's' : ''} participant${(total - participants.length) > 1 ? 's' : ''}',
+                            style: TextStyle(color: AppColors.grey, fontSize: 12),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    '${p['prenom']} ${p['nom']}',
-                    style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600, fontSize: 14),
-                  ),
-                );
-              },
+                  ],
+
+                  // ── Position du joueur connecté (s'il est hors top 15) ──
+                  if (monRang != null && monRangNum != null && monRangNum > participants.length) ...[
+                    Divider(color: AppColors.border, height: 1),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      leading: CircleAvatar(
+                        radius: 16,
+                        backgroundColor: AppColors.surface2,
+                        child: Text(
+                          '🎯$monRangNum',
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      title: Text(
+                        '${monRang['prenom']} ${monRang['nom']}',
+                        style: TextStyle(color: AppColors.white, fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      trailing: Text(
+                        'Vous',
+                        style: TextStyle(color: AppColors.grey, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
+
+          const SizedBox(height: 40),
         ],
       ),
     );
   }
 }
+
 
 // ── Widgets partagés ─────────────────────────────────────────
 
